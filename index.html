@@ -1,0 +1,1901 @@
+﻿<!DOCTYPE html>
+<html>
+	<head>
+		<title></title>
+		<meta http-equiv="Content-Type" content="text/html; charset=utf-8">
+		<meta http-equiv="X-UA-Compatible" content="chrome=1">
+
+		<meta name="apple-mobile-web-app-capable" content="yes">
+		<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=0">
+
+		<link type="image/ico" rel="shortcut icon" href="resources/images/favicon.ico">
+		<link type="image/ico" rel="icon"  href="resources/images/favicon.ico">
+
+		<meta property="og:title" content="Map Tour"/>
+		<meta property="og:image" content="resources/icons/esri-logo.jpg"/>
+		<meta property="og:description" content="Map Tour template enable ArcGIS user to create place-based narrative combining images, text, and a map through an interactive editing tool."/>
+
+		<script type="text/javascript">
+			//--------------------------------
+			//     Template configuration
+			//--------------------------------
+			configOptions = {
+				// The web map id (can be overridden through URL)
+				webmap : "cecf5a00983d4d94bc562ac117b88c11",
+				// The list of authorized web map owners (e.g. ["user1"], ["user1", "user2"])
+				authorizedOwners : [""],
+				// Select the application layout between "three-panel" and "integrated"
+				layout : "integrated",
+				// The application header title, if no title is specified, the webmap's title is used
+				title : "",
+				// The application header subtitle, if not specified the ArcGIS.com web map's summary is used
+				subtitle : "",
+				// Optionally force a web map layer to be used as the tour points data source (can be overridden through URL)
+				// Otherwise the upper visible point layer is used (excluding map notes)
+				sourceLayerTitle : "TourLocations",
+				// Use the first data record as an introduction instead of a point (can be overridden through URL)
+				firstRecordAsIntro : false,
+				// Optional zoom level to be applied for the story points following introduction (can be overridden through URL) (e.g: 0 to 16 for Gray Canvas, 0 to 19 for Street Map, -1 to disable)
+				zoomLevel : 16,
+				// If the webmap uses Bing Maps data, you will need to provide your Bing Maps Key
+				bingmapskey : "",
+				// Optionally specify a proxy for specific deployment
+				//proxyurl: "//www.arcgis.com/sharing/proxy",
+				// Optionally specify the sharing service URL if you are using Portal for ArcGIS
+				//sharingurl: "//www.arcgis.com/sharing/content/items",
+				// Specify the url to a geometry service
+				//geometryserviceurl : "//tasks.arcgisonline.com/ArcGIS/rest/services/Geometry/GeometryServer"
+				geometryserviceurl : "//gis.ecan.govt.nz/arcgis/rest/services/Utilities/Geometry/GeometryServer"
+			};
+		</script>
+
+		<style type="text/css">
+			/* Responsive additions */
+
+			@media screen and (min-width: 768px) and (orientation: landscape) {
+				#listPanel, #infoPanel, #introPanel {
+					display: none !important;
+				}
+
+				#contentPanel {
+					display: block !important;
+				}
+			}
+
+			@media only screen and (min-device-width: 768px) and (max-device-width: 1024px) and (orientation: landscape) {
+				#initPopup, #helpPopup, #importPopup {
+					top: 10% !important;
+				}
+			}
+
+			@media screen and (min-width: 768px) and (orientation: portrait) {
+				#picturePanel {
+					display: none !important;
+				}
+
+				#legendPanel {
+					top: 120px !important;
+					right: 5px !important;
+				}
+			}
+
+			@media screen and (max-width: 767px) , screen and (orientation: portrait) {
+				#legendPanel {
+					display: none;
+				}
+				#SearchContainer
+				{
+					display: none;
+				}
+				#headerDesktop {
+					display: none;
+				}
+
+				#header {
+					height: 41px;
+					background-color: #c2c2c2;
+				}
+
+				#picturePanel {
+					display: none;
+				}
+
+				#mapPanel {
+					width: 100% !important;
+				}
+
+				#footerDesktop {
+					display: none;
+				}
+				#toggleImage
+				{
+					display: none;
+				}
+
+				#openHeaderMobile {
+					display: block;
+				}
+
+				#footerMobile {
+					display: block;
+				}
+
+				#headerMobile {
+					display: block;
+				}
+
+				#loadingOverlay {
+					top: 0px;
+				}
+
+				#builderPanel2, #builderPanel3 {
+					display: none !important;
+				}
+
+				.modal, .modal-backdrop {
+					display: none !important;
+				}
+			}
+
+			.name {
+				color: rgb(194, 172, 126);
+			}
+
+			.modal .modal-body {
+				max-height: 420px !important;
+				overflow-y: auto;
+			}
+			.carousel{
+				margin-bottom:0px!important;
+			}
+
+		</style>
+
+		<script type="text/javascript">
+			var version = '2.0';
+			var isProduction = true;
+
+			function loadJS(url, isExternal) {
+				if (isExternal)
+					url = document.location.protocol == 'file:' ? 'http:' + url : url;
+				else
+					url += '?v=' + version + (!isProduction ? '&_=' + new Date().getTime() : '');
+
+				document.write("<script language='javascript' type='text/javascript' src='" + url + "'><\/script>");
+			}
+
+			function loadCSS(url, isExternal) {
+				if (isExternal)
+					url = document.location.protocol == 'file:' ? 'http:' + url : url;
+				else
+					url += '?v=' + version + (!isProduction ? '&_=' + new Date().getTime() : '');
+
+				var el = document.createElement("link");
+				el.setAttribute("rel", "stylesheet");
+				el.setAttribute("type", "text/css");
+				el.setAttribute("href", url);
+				document.getElementsByTagName("head")[0].appendChild(el);
+			}
+
+			loadCSS("//js.arcgis.com/3.6/js/esri/css/esri.css", true);
+			loadCSS("//js.arcgis.com/3.6/js/dojo/dijit/themes/claro/claro.css", true);
+
+			if (isProduction) {
+				loadCSS("app/maptour-min.css");
+			} else {
+				loadCSS("lib/bootstrap/css/bootstrap.min.css");
+				loadCSS("lib/spectrum/spectrum.css");
+
+				loadCSS("app/storymaps/ui/crossfader/CrossFader.css");
+				loadCSS("app/storymaps/ui/multiTips/MultiTips.css");
+				loadCSS("app/storymaps/ui/inlineFieldEdit/InlineFieldEdit.css");
+				loadCSS("app/storymaps/ui/loadingIndicator/LoadingIndicator.css");
+
+				loadCSS("app/storymaps/core/Core.css");
+				loadCSS("app/storymaps/maptour/core/MainView.css");
+				loadCSS("app/storymaps/ui/header/Header.css");
+				loadCSS("app/storymaps/maptour/ui/MapCommand.css");
+				loadCSS("app/storymaps/maptour/ui/desktop/Carousel.css");
+				loadCSS("app/storymaps/maptour/ui/desktop/PicturePanel.css");
+
+				loadCSS("app/storymaps/builder/Builder.css");
+				loadCSS("app/storymaps/builder/BuilderPanel.css");
+
+				loadCSS("app/storymaps/builder/SettingsPopup.css");
+				loadCSS("app/storymaps/maptour/builder/SettingsPopupTabLayout.css");
+				loadCSS("app/storymaps/builder/SettingsPopupTabColors.css");
+				loadCSS("app/storymaps/builder/SettingsPopupTabHeader.css");
+				loadCSS("app/storymaps/maptour/builder/SettingsPopupTabFields.css");
+				loadCSS("app/storymaps/builder/SettingsPopupTabExtent.css");
+				loadCSS("app/storymaps/maptour/builder/SettingsPopupTabZoom.css");
+
+				loadCSS("app/storymaps/maptour/builder/InitPopup.css");
+				loadCSS("app/storymaps/maptour/builder/InitPopupViewHome.css");
+				loadCSS("app/storymaps/maptour/builder/InitPopupViewHostedFSCreation.css");
+				loadCSS("app/storymaps/maptour/builder/ImportPopupViewHome.css");
+
+				loadCSS("app/storymaps/maptour/builder/PopupViewCSV.css");
+				loadCSS("app/storymaps/maptour/builder/PopupViewFlickr.css");
+				loadCSS("app/storymaps/maptour/builder/PopupViewFacebook.css");
+				loadCSS("app/storymaps/maptour/builder/PopupViewPicasa.css");
+				loadCSS("app/storymaps/maptour/builder/PopupViewGeoTag.css");
+
+				loadCSS("app/storymaps/maptour/builder/BuilderView.css");
+				loadCSS("app/storymaps/maptour/builder/OrganizePopup.css");
+				loadCSS("app/storymaps/maptour/builder/AddPopup.css");
+				loadCSS("app/storymaps/maptour/builder/HelpPopup.css");
+
+				loadCSS("app/storymaps/maptour/ui/mobile/Common.css");
+				loadCSS("app/storymaps/maptour/ui/mobile/Carousel.css");
+				loadCSS("app/storymaps/maptour/ui/mobile/IntroView.css");
+				loadCSS("app/storymaps/maptour/ui/mobile/ListView.css");
+				loadCSS("app/storymaps/maptour/ui/mobile/InfoView.css");
+				loadCSS("app/storymaps/maptour/ui/Responsive.css");
+			}
+
+			var dojoConfig = {
+				parseOnLoad : false,
+				isDebug : false,
+				packages : [{
+					name : 'storymaps',
+					location : location.pathname.replace(/\/[^/]+$/, '/') + 'app/storymaps'
+				}, {
+					name : 'esriTemplate',
+					location : location.pathname.replace(/\/[^/]+$/, '/') + 'resources'
+				}]
+			};
+		</script>
+		<!-- <link rel="stylesheet" type="text/css" href="resources/bootstrap/bootstrap.min.css" /> -->
+		<link rel="stylesheet" type="text/css" href="resources/bootstrap/typeahead.css" />
+	</head>
+	<body class="claro">
+	<!-- TODO ADD THIS IN FOR SHITE BROWSERS 
+    <div id="browserSupport" class="hidden">
+        <p>You are using a browser which this portal does not support. Some features may not
+        work correctly. Upgrade to a <a href="http://www.whatbrowser.org/" target="_blank">modern
+            browser</a> to take full advantage of this site. <a href="#" onclick="dismissAgentWarning()">Dismiss</a></p></div>
+    <script type="text/javascript">
+        function dismissAgentWarning() {
+            $('#browserSupport').slideUp(800);
+            $.cookie('tourofchch_hide_agents', 'hidden', { expires: 7 });
+        }
+        
+        $(document).ready(function () {
+            // Check for cookie
+            if (!($.cookie('tourofchch_hide_agents') || $.cookie('tourofchch_hide_agents') == 'hidden')) {
+                $('#browserSupport').slideDown(800);
+            }
+        }); 
+    </script>
+	-->
+		<div id="header">
+			<!-- Mobile header -->
+			<div id="headerMobile" class="firstDisplay">
+				<div class="banner2">
+					<p id="closeHeaderMobile"></p>
+					<h1 class="title"></h1>
+					<h2 class="subtitle"></h2>
+
+					<!-- Legend Panel -->
+					<div id="legendPanelMobile">
+						<div style="height:100%">
+							<!--
+							<div class="control-group">
+							
+								<div class="controls">
+
+									<label id='redzone' class="checkbox redzone">
+										<input type="checkbox" checked>
+										<div style="background-color: rgb(226, 94, 94);width:20px;height:20px;margin: 0;"></div> Red Zone</label>
+								</div>
+								<div class="controls">
+
+									<label id='tc3' class="checkbox tc3">
+										<input type="checkbox" checked>
+										<div style="background-color: rgb(129, 160, 180);width:20px;height:20px;margin: 0;"></div> TC3 Zone</label>
+								</div>
+								
+							</div>-->
+							
+							<div id='labels' style="display:block">
+								<div class="control-group">
+									<div class="controls">
+
+										<label class="checkbox labels">
+											<input type="checkbox" checked>
+											Labels </label>
+									</div>
+								</div>
+
+							</div>
+							<!--
+							<div id='imagery' style="display:block">
+								<div class="control-group">
+									<div class="controls">
+
+										<label class="checkbox imagery">
+											<input type="checkbox">
+											Imagery </label>
+									</div>
+								</div>
+
+							</div>-->
+							<div id="imageryDates" style="display:block; margin-left: 15px;">
+								<div class="control-group">
+									<div>Imagery </div>
+									<div class="controls">
+										<label class="radio">
+										<input type="radio" name="Imagery" id="m1941" value="SN152_Christchurch_19411014" checked="checked" >
+											1941 </label>
+                                        <label class="radio">
+											<input type="radio" name="Imagery" id="m1946" value="SN393_Christchurch_19460528" >
+											1946 </label>
+                                        <label class="radio">
+											<input type="radio" name="Imagery" id="m1955" value="SN872_Christchurch_19550510" >
+											1955 </label>
+										    <label class="radio">
+											<input type="radio" name="Imagery" id="m1965" value="SN1786_Christchurch_19651029" >
+											1965 </label>
+											<label class="radio">
+											<input type="radio" name="Imagery" id="m1973" value="SN2634_Christchurch_19730926" >
+											1973 </label>
+											<label class="radio">
+											<input type="radio" name="Imagery" id="m1984" value="SN8389_Christchurch_19840928" >
+											1984 </label>
+											<label class="radio">
+											<input type="radio" name="Imagery" id="m1994" value="SN9381_Christchurch_19941126" >
+											1994 </label>
+										<label class="radio">
+											<input type="radio" name="Imagery" id="m2004" value="TL_Ortho75_Canterbury" >
+											2004 </label>
+										<label class="radio">
+											<input type="radio" name="Imagery" id="m2011" value="NZAM_11010_Christchurch_20110224" >
+											2011 </label>
+                                        <label class="radio">
+											<input type="radio" name="Imagery" id="mlatest" value="Imagery" >
+											Latest </label>
+									</div>
+								</div>
+							</div>
+							<p class="text-info">
+								<small><i>click to show/hide</i></small>
+							</p>
+						</div>
+
+					</div>
+
+				</div>
+				<h3 class="navBar"><span id="listViewLink" data-viewid="list" class="leftLink"></span><span id="mapViewLink"  data-viewid="map" class="current"></span><span id="infoViewLink" data-viewid="info" class="rightLink"></span></h3>
+			</div>
+			<div id="openHeaderMobile"></div>
+			<!-- Desktop header -->
+			<div id="headerDesktop">
+				<div class="textArea">
+					<h1 class="title" style="color:rgb(194, 172, 126);"></h1>
+					<h2 class="subtitle" ></h2>
+				</div>
+				<div class="rightArea">
+					<div class="social">
+						<span class="msLink"> <a href="http://storymaps.esri.com" target="_blank"></a> </span>
+						<span class='st_facebook'></span>
+						<span class='st_twitter'></span>
+					</div>
+					<div class="logo">
+						<a data-toggle="modal" href="#aboutModal" style="color: whitesmoke;">About &amp; Credits</a>
+					</div>
+				</div>
+				<button type="button" class="switchBuilder btn btn-success" style="display:none"></button>
+				<!-- Builder top panel -->
+				<div id="builderPanel">
+					<h4></h4>
+					<div>
+						<button type="button" class="btn builder-save"></button>
+						<button type="button" class="btn builder-discard"></button>
+						<button type="button" class="btn builder-settings"></button>
+						<button type="button" class="btn small builder-view"></button>
+						<button type="button" class="btn small builder-help"></button>
+					</div>
+					<div id="save-counter"></div>
+				</div>
+			</div>
+		</div>
+		<div id="contentPanel" class="mobileView">
+			<!-- Map panel -->
+			<div id="mapPanel">
+				<div id="mainMap">
+					<div id="hoverInfo"></div>
+				</div>
+			</div>
+			<!-- Legend Panel -->
+			<div id="legendPanel" style="position: absolute;top: 255px;left: 5px;color: #FFF;background-image: url(resources/icons/background_filler.png);padding: 5px;border-style: solid;border-color: #333;">
+				<div style="height:100%">
+				<!--
+					<div class="control-group">
+						<div class="controls">
+
+							<label id='redzone' class="checkbox redzone">
+								<input type="checkbox" checked>
+								<div style="background-color: rgb(226, 94, 94);width:20px;height:20px;margin: 0;"></div> Red Zone</label>
+						</div>
+						<div class="controls">
+
+							<label id='tc3' class="checkbox tc3">
+								<input type="checkbox" checked>
+								<div style="background-color: rgb(129, 160, 180);width:20px;height:20px;margin: 0;"></div> TC3 Zone</label>
+						</div>
+					</div>
+					-->
+					<div id='labels' style="display:block">
+						<div class="control-group">
+							<div class="controls">
+
+								<label class="checkbox labels">
+									<input type="checkbox" checked>
+									Labels </label>
+							</div>
+						</div>
+
+					</div>
+					<!--
+					<div id='imagery' style="display:block">
+						<div class="control-group">
+							<div class="controls">
+
+								<label class="checkbox imagery">
+									<input type="checkbox">
+									Imagery </label>
+							</div>
+						</div> 
+
+					</div>-->
+					<div id="imageryDates" style="display:block; margin-left: 15px;">
+						<div class="control-group">
+							<div class="controls">
+								<div>Imagery </div>
+								<label class="radio">
+									<input type="radio" name="Imagery" id="1941" value="SN152_Christchurch_19411014" checked="checked" >
+									1941 </label>
+                                <label class="radio">
+                                    <input type="radio" name="Imagery" id="1946" value="SN393_Christchurch_19460528" >
+											1946 </label>
+                                        <label class="radio">
+											<input type="radio" name="Imagery" id="1955" value="SN872_Christchurch_19550510" >
+											1955 </label>
+								<label class="radio">
+									<input type="radio" name="Imagery" id="1965" value="SN1786_Christchurch_19651029" >
+									1965 </label>
+									<label class="radio">
+											<input type="radio" name="Imagery" id="1973" value="SN2634_Christchurch_19730926" >
+											1973 </label>
+											<label class="radio">
+											<input type="radio" name="Imagery" id="1984" value="SN8389_Christchurch_19840928" >
+											1984 </label>
+											<label class="radio">
+											<input type="radio" name="Imagery" id="1994" value="SN9381_Christchurch_19941126" >
+											1994 </label>
+								<label class="radio">
+									<input type="radio" name="Imagery" id="2004" value="TL_Ortho75_Canterbury" >
+									2004 </label>
+								<label class="radio">
+									<input type="radio" name="Imagery" id="2011" value="NZAM_11010_Christchurch_20110224"  >
+									2011 </label>
+                                 <label class="radio">
+											<input type="radio" name="Imagery" id="latest" value="Imagery" >
+											Latest </label>
+							</div>
+						</div>
+					</div>
+					<p class="text-info">
+						<small><i>click to show/hide</i></small>
+					</p>
+				</div>
+
+			</div>
+			<!-- Search Panel -->
+				<div id="SearchContainer" style="z-index:1;top: 120px!important;right: 25px!important;position: absolute!important;background-image: url(resources/icons/background_filler.png);padding: 5px;">
+					<!--<form class="form-search">-->
+						<input id="AddressSearch" type="text" placeholder="Search for an address or suburb (in CHCH)" class="span5 autoCompleteInput tips typeahead search-query" data-provide="typeahead" title="enter your address e.g. 58 Kilmore St">
+						<button id="clearBtn" class="btn" title="click to clear address">
+							Clear
+						</button>
+					<!--</form>-->
+					<div class="control-group">
+
+					</div>
+				</div>
+			<!-- Picture panel -->
+			<div id="picturePanel">
+				<img id="arrowPrev" class="arrow disabled" />
+				<div id="cfader"></div>
+				<div id="pictureLoadingIndicator" style="visibility:hidden;"></div>
+				<img id="arrowNext" class="arrow disabled" />
+				<!-- Builder picture panel buttons -->
+				<div class="editPictureButtons">
+					<div>
+						<span class="attributesWay">
+							<form>
+								<button class="btn btn-picture" type="button" class="btn"></button>
+								<button class="btn btn-thumbnail" type="button" class="btn"></button>
+							</form> </span>
+						<span class="modernBrowserWay">
+							<form>
+								<input class="btn-picture" type="file" accept="image/jpeg" />
+								<input class="btn-thumbnail" type="file" accept="image/jpeg" />
+							</form> </span>
+						<span class="oldBrowserWay">
+							<form id="ppOldBrowserWayPicForm">
+								<input class="btn-picture" type="file" accept="image/jpeg" name="attachment" />
+							</form>
+							<form id="ppOldBrowserWayThumbForm">
+								<input class="btn-thumbnail" type="file" accept="image/jpeg" name="attachment" />
+							</form> <button type="button" class="btn-upload btn" disabled="true"></button> </span>
+					</div>
+				</div>
+			</div>
+			<!-- Builder bottom panel -->
+			<div id="builderPanel3">
+				<button id="introRecordButton" type="button" class="btn"></button>
+			</div>
+			<!-- Builder bottom panel -->
+			<div id="builderPanel2">
+				<button id="addPopupButton" type="button" class="btn"></button>
+				<button id="organizeSlidesButton" type="button" class="btn"></button>
+				<button id="importPopupButton" type="button" class="btn"></button>
+			</div>
+		</div>
+
+		<!-- Mobile views -->
+		<div id="listPanel" class="mobileView">
+			<div id="listPanel2"></div>
+		</div>
+		<div id="infoPanel" class="mobileView">
+			<div id="infoCarousel"></div>
+		</div>
+		<div id="introPanel" class="mobileView"></div>
+
+		<!-- Footer -->
+		<div id="footer">
+			<div style="float: right;margin-top: -30px;">
+				<a id='toggleImage' class="btn btn-inverse" href="#"><img src="resources/images/hide-nav.png" /> Hide/show image</a>
+				</div>
+			<!-- Desktop footer -->
+			<div id="footerDesktop">
+				<div class="carousel">
+					<img class="arrowLeft" />
+					<div class="carouselWrapper">
+						<div class="carouselScroller">
+							<ul></ul>
+						</div>
+					</div>
+					<img class="arrowRight" />
+				</div>
+			</div>
+			<!-- Mobile footer -->
+			<div id="footerMobile">
+				<div class="builderMobileContainer">
+					<span class="builderMobile">
+						<form>
+							<input class="btn-info btn-medium" type="file" accept="image/*" capture="camera"/>
+						</form> </span>
+				</div>
+				<div class="carousel"></div>
+			</div>
+		</div>
+
+		<!-- Loading indicator -->
+		<div id="loadingOverlay"></div>
+		<div id="loadingIndicator"></div>
+		<div id="loadingMessage"></div>
+
+		<!-- Organize popup -->
+		<div class="modal hide" id="organizePopup" data-backdrop="static" tabindex="-1">
+			<div class="modal-header">
+				<button type="button" class="close" data-dismiss="modal" aria-hidden="true">
+					&times;
+				</button>
+				<h3></h3>
+			</div>
+			<div class="modal-body">
+				<div class="pictureGridHeader">
+					<div>
+						<span id="generalCaption"></span>
+						<span id="buttonBar"> <button id="btnDelete" class="btn" disabled="true"></button> <button id="btnHide" class="btn" disabled="true"></button> </span>
+					</div>
+				</div>
+				<div class="gridContainer">
+					<ul class="picturesGrid"></ul>
+				</div>
+				<div class="organizeIntro"></div>
+			</div>
+			<div class="modal-footer">
+				<button class="btnSave btn btn-primary" data-dismiss="modal"></button>
+				<button class="btnClose btn" data-dismiss="modal" aria-hidden="true"></button>
+			</div>
+		</div>
+
+		<!-- Add popup -->
+		<div class="modal hide" id="addPopup" data-backdrop="static" tabindex="-1">
+			<div class="modal-header">
+				<button type="button" class="close" data-dismiss="modal" aria-hidden="true">
+					&times;
+				</button>
+				<h3></h3>
+			</div>
+			<div class="modal-tabs">
+				<div class="tab">
+					<i class="tab-icon"></i>
+				</div>
+				<div class="tab">
+					<i class="tab-icon"></i>
+				</div>
+				<div class="tab">
+					<i class="tab-icon"></i>
+				</div>
+			</div>
+			<div class="modal-body">
+				<div class="maxPictureReached"></div>
+				<!-- Picture tab for layer with attachments -->
+				<div class="addImage tab-content">
+					<div class="imageUploadWrapper">
+						<form id="addImageUploadFormPicture" onsubmit="return false">
+							<input class="uploadButton clearVal btn-success btn-large" type="file" accept="image/jpeg" name="attachment" />
+							<ul class="errorList" style="text-align:center; margin-top: 4px"></ul>
+						</form>
+					</div>
+					<div class="leftPanel previewPanel">
+						<img id="addImagePreview" class="imagePreview img-polaroid" src="" alt="" />
+						<div class="changePhoto">
+							<button></button>
+						</div>
+						<div class="pictureSize"></div>
+					</div>
+					<div class="rightPanel previewPanel">
+						<p class="imagePreviewName clearHTML"></p>
+						<div class="exifData">
+							<div class="exifMajor clearHTML"></div>
+							<p class="exifMinorHeader settingHeading"></p>
+							<div class="exifMinor clearHTML"></div>
+						</div>
+						<div class="thumbnail">
+							<p class="settingHeading"></p>
+							<div class="thumbnailFile">
+								<canvas id="thumbnailFileCanvas" width="140px" height="93px"></canvas>
+							</div>
+							<div class="thumbnailForm">
+								<div class="fileName cameraSettings" style="margin-bottom: 2px"></div>
+								<form id="addImageUploadFormThumbnail">
+									<input class="btn btn-small clearVal" type="file" accept="image/jpeg" name="attachment"/>
+								</form>
+								<ul class="errorList"></ul>
+							</div>
+						</div>
+					</div>
+				</div>
+				<!-- Picture tab for embedded layer -->
+				<div class="addImageAttributes tab-content">
+					<form>
+						<div>
+							<label></label>
+							<input class="tourPointPicUrl clearVal" type="text" placeholder=""/>
+							<label></label>
+							<input class="tourPointThumbUrl clearVal" type="text" placeholder=""/>
+						</div>
+					</form>
+					<ul class="errorList"></ul>
+				</div>
+				<!-- Information tab -->
+				<div class="addText tab-content">
+					<div>
+						<label></label>
+						<input class="tourPointNameField clearVal" type="text" placeholder="" />
+						<label></label>
+						<textarea rows="4" class="tourPointDescr clearVal" placeholder=""></textarea>
+					</div>
+					<ul class="errorList"></ul>
+				</div>
+				<!-- Location tab -->
+				<div class="addLocation tab-content">
+					<ul class="errorList"></ul>
+					<div>
+						<label></label>
+						<span class="pinContainer"></span>
+						<span class="locationForm"> <label></label>
+							<input class="latitude clearVal" type="text" placeholder="" maxlength="7" pattern="[0-9]*"/>
+							<label></label>
+							<input class="longitude clearVal" type="text" placeholder="" maxlength="7" pattern="[0-9]*"/>
+						</span>
+					</div>
+					<div id="locateMap"></div>
+				</div>
+			</div>
+			<div class="modal-footer">
+				<span class="error"></span>
+				<span class="success"></span><img src="resources/icons/loader-upload.gif" class="addSpinner" />
+				<button class="btnSave btn btn-primary"></button>
+				<button class="btnClose btn" data-dismiss="modal" aria-hidden="true"></button>
+			</div>
+		</div>
+
+		<!-- Init popup -->
+		<div class="modal hide" id="initPopup" data-backdrop="static">
+			<div class="modal-header">
+				<h3></h3>
+			</div>
+			<div class="modal-body">
+				<!-- views declared in init-import-views are injected -->
+			</div>
+			<div class="modal-footer">
+				<span class="dataFooterText"></span>
+				<button class="btnNext btn btn-primary"></button>
+				<button class="btnPrev btn"></button>
+			</div>
+		</div>
+
+		<!-- Import popup -->
+		<div class="modal hide" id="importPopup" data-backdrop="static" tabindex="-1">
+			<div class="modal-header">
+				<button type="button" class="close" data-dismiss="modal" aria-hidden="true">
+					&times;
+				</button>
+				<h3></h3>
+			</div>
+			<div class="modal-body">
+				<!-- views declared in init-import-views are injected -->
+			</div>
+			<div class="modal-footer">
+				<span class="dataFooterText"></span>
+				<button class="btnNext btn btn-primary"></button>
+				<button class="btnPrev btn"></button>
+			</div>
+		</div>
+
+		<div id="init-import-views">
+			<!-- Init specific -->
+			<div id="initPopupViewHome">
+				<div class="header2"></div>
+				<div class="sideContainer">
+					<div class="sideTitle sideTitle1"></div>
+					<table class="leftTable">
+						<tr>
+							<td class="btn-select-flickr"><img src="resources/icons/builder-import-flickr.png" style="width: 50px"/>
+							<div>
+								Flickr
+							</div></td>
+							<td class="btn-select-fb"><img src="resources/icons/builder-import-facebook.png" style="height: 46px"/>
+							<div style="margin-top: 6px;">
+								Facebook
+							</div></td>
+							<td class="btn-select-picasa"><img src="resources/icons/builder-import-picasa.png" style="width: 50px"/>
+							<div>
+								Picasa
+							</div></td>
+						</tr>
+						<tr>
+							<td class="btn-select-csv"><img src="resources/icons/builder-import-csv.png" style="width: 50px"/><div class="csvLbl"></div></td>
+							<td class="btn-select-scratch"><img src="resources/icons/builder-import-scratch.png" style="width: 40px"/><div class="scratchLbl"></div></td>
+						</tr>
+
+					</table>
+				</div>
+				<div class="sideContainer">
+					<div class="sideTitle sideTitle2"></div>
+					<table>
+						<tr>
+							<td class="btn-select-hostedFS"><img src="resources/icons/builder-import-arcgis.png" style="width: 120px"/>
+							<div>
+								ArcGIS Online
+							</div>
+							<div>
+								Hosted Feature Service
+							</div></td>
+						</tr>
+					</table>
+					<div class="notAvailable hostedFsNote"></div>
+				</div>
+				<div class="footer1"></div>
+				<div class="footer2"></div>
+			</div>
+
+			<div id="initPopupViewHostedFSCreation">
+				<p class="dataExplain"></p>
+				<form class="form-horizontal">
+					<div class="control-group">
+						<label class="control-label dataNameLbl" for="dataNameInput"></label>
+						<div class="controls">
+							<input id="dataNameInput" type="text" placeholder="" maxlength="80"/>
+						</div>
+					</div>
+					<div class="control-group">
+						<label class="control-label dataFolderListLbl" for="dataFolderListInput"></label>
+						<div class="controls">
+							<div class="btn-group">
+								<select id="dataFolderListInput"></select>
+							</div>
+						</div>
+					</div>
+				</form>
+				<ul class="dataError"></ul>
+			</div>
+
+			<!-- Import specific -->
+			<div id="importPopupViewHome">
+				<h3 class="header"></h3>
+				<table>
+					<tr>
+						<td class="btn-select-flickr"><img src="resources/icons/builder-import-flickr.png" style="width: 50px"/>
+						<div>
+							Flickr
+						</div></td>
+						<td class="btn-select-fb"><img src="resources/icons/builder-import-facebook.png" style="height: 46px"/>
+						<div style="margin-top: 6px;">
+							Facebook
+						</div></td>
+						<td class="btn-select-picasa"><img src="resources/icons/builder-import-picasa.png" style="width: 50px"/>
+						<div>
+							Picasa
+						</div></td>
+						<td class="btn-select-csv"><img src="resources/icons/builder-import-csv.png" style="width: 50px"/><div class="csvLbl"></div></td>
+					</tr>
+				</table>
+				<div class="footer"></div>
+			</div>
+
+			<!-- Common -->
+			<div id="popupViewCSV" class="popupViewCSV">
+				<div class="popupViewCSVView popupViewCSV-home">
+					<div class="csvUploadWrapper">
+						<form onsubmit="return false">
+							<input class="uploadButton btn-success btn-large" type="file" accept=".csv" />
+						</form>
+					</div>
+				</div>
+				<div class="popupViewCSVView popupViewCSV-result">
+					<div class="csvResultHeader"></div>
+					<div class="csvResultFields"></div>
+					<div class="csvResultMap"></div>
+				</div>
+				<div class="popupViewCSVView popupViewCSV-error"></div>
+			</div>
+			<div id="popupViewFlickr" class="popupViewFlickr">
+				<div class="headerContainer">
+					<span class="header"></span>
+					<span class="commonHeader"></span>
+				</div>
+				<input class="selectUserName" type="text" value=""/>
+				<button class="btn btn-userLogin"></button>
+				<span class="signInMsg"></span>
+				<div>
+					<div class="selectContainer">
+						<div class="control-group">
+							<label class="control-label" for="flickrListSet"></label>
+							<div class="controls">
+								<div class="btn-group">
+									<select id="flickrListSet"></select>
+								</div>
+							</div>
+						</div>
+					</div>
+					<div class="selectContainer">
+						<div class="control-group">
+							<label class="control-label" for="flickrListTag"></label>
+							<div class="controls">
+								<div class="btn-group">
+									<select id="flickrListTag"></select>
+								</div>
+							</div>
+						</div>
+					</div>
+					<div class="useLocation">
+						<input type="checkbox" name="fbUseLocation"/>
+						<span></span>
+					</div>
+				</div>
+			</div>
+			<div id="popupViewFacebook" class="popupViewFacebook">
+				<div class="headerContainer">
+					<span class="header"></span>
+					<span class="commonHeader"></span>
+				</div>
+				<div>
+					<div class="selectContainer">
+						<div class="control-group">
+							<div class="sideHeader"></div>
+							<div class="facebookLogin">
+								<fb:login-button size="small" show-faces="true" width="200" max-rows="1" scope="user_photos" autologoutlink="true"></fb:login-button>
+							</div>
+							<label class="control-label" for="facebookListAlbum1"></label>
+							<div class="controls">
+								<div class="btn-group">
+									<select id="facebookListAlbum1"></select>
+								</div>
+							</div>
+						</div>
+					</div>
+					<div class="selectContainer">
+						<div class="control-group">
+							<div class="sideHeader"></div>
+							<input class="selectPageName" type="text" value=""/>
+							<button class="btn btn-pageLookup">
+								<i class="icon-search"></i>
+							</button>
+							<div class="spacer">
+								&nbsp;
+							</div>
+
+							<label class="control-label" for="facebookListAlbum2"></label>
+							<div class="controls">
+								<div class="btn-group">
+									<select id="facebookListAlbum2"></select>
+								</div>
+							</div>
+							<div class="lookingUpMsg"></div>
+						</div>
+					</div>
+				</div>
+				<div class="useLocation">
+					<input type="checkbox" name="fbUseLocation"/>
+					<span></span>
+				</div>
+			</div>
+			<div id="popupViewPicasa" class="popupViewPicasa">
+				<div class="headerContainer">
+					<span class="header"></span>
+					<span class="commonHeader"></span>
+				</div>
+				<div class="contentContainer">
+					<input class="selectUserName" type="text" value=""/>
+					<button class="btn btn-userLogin"></button>
+					<span class="signInMsg"></span>
+
+					<label class="control-label" for="picasaListAlbum"></label>
+					<div class="controls">
+						<div class="btn-group">
+							<select id="picasaListAlbum"></select>
+						</div>
+					</div>
+
+					<div class="howToFind">
+						<a></a>
+					</div>
+				</div>
+			</div>
+			<div id="popupViewGeoTag" class="popupViewGeoTag">
+				<div class="header"></div>
+				<div class="leftPanel">
+					<ul class="nav nav-tabs">
+						<li>
+							<a></a>
+						</li>
+						<li>
+							<a></a>
+						</li>
+					</ul>
+					<div class="tab-content">
+						<div class="tobelocated"></div>
+						<div class="located"></div>
+					</div>
+				</div>
+				<div class="mapPanel">
+					<div class="geotagMap"></div>
+					<div class="clickOrTapInfo"></div>
+				</div>
+			</div>
+		</div>
+
+		<!-- Settings popup -->
+		<div class="modal hide" id="settingsPopup" data-backdrop="static" tabindex="-1">
+			<div class="modal-header">
+				<button type="button" class="close" data-dismiss="modal" aria-hidden="true">
+					&times;
+				</button>
+				<h3></h3>
+			</div>
+			<div class="settingsPopupHeader modal-tabs">
+				<div class="tab"></div>
+				<div class="tab"></div>
+				<div class="tab"></div>
+				<div class="tab"></div>
+				<div class="tab"></div>
+				<div class="tab"></div>
+			</div>
+			<div class="modal-body">
+				<!-- Layout -->
+				<div id="settings-layout" class="tab-content">
+					<p></p>
+					<span class="layout-box"> <div></div> <img /> <button class="btn"></button> <div class="selectedLayout"></div> </span>
+					<span class="layout-box"> <div class="layout-box-title"></div> <img /> <button class="btn"></button> <div class="selectedLayout"></div> </span>
+				</div>
+				<!-- Colors -->
+				<div id="settings-colors" class="tab-content">
+					<p></p>
+					<form class="form-horizontal">
+						<div id="colorScheme" class="control-group" style="margin-bottom: 5px">
+							<label class="control-label"></label>
+							<div class="controls"></div>
+						</div>
+					</form>
+				</div>
+				<!-- Header -->
+				<div id="settings-header" class="tab-content">
+					<p></p>
+					<form class="form-horizontal form1">
+						<div class="control-group">
+							<div class="controls">
+								<label class="radio">
+									<input type="radio" name="optionsLogo" id="optionsRadios2" value="esri" checked>
+									<span class="logoText"></span> </label>
+								<label class="radio">
+									<input type="radio" name="optionsLogo" id="optionsRadios1" value="none">
+									<span class="logoText"></span> </label>
+								<label class="radio">
+									<input type="radio" name="optionsLogo" id="optionsRadios2" value="custom">
+									<span class="logoText"></span> </label>
+								<div class="optionsLogoCustom">
+									<input id="logoInput" type="text" placeholder="">
+									<input id="logoTargetInput" type="text" placeholder="">
+								</div>
+							</div>
+							<div id="headerSimulator">
+								<img id="imgLogo"/>
+							</div>
+						</div>
+					</form>
+					<p></p>
+					<form class="form-horizontal form2">
+						<div class="control-group">
+							<label class="control-label" for="selectSocialText"></label>
+							<div class="controls">
+								<input id="selectSocialText" type="text" />
+							</div>
+						</div>
+						<div class="control-group">
+							<label class="control-label" for="selectSocialLink"></label>
+							<div class="controls">
+								<input id="selectSocialLink" type="text" />
+							</div>
+						</div>
+					</form>
+				</div>
+				<!-- Data Fields -->
+				<div id="settings-fields" class="tab-content">
+					<div class="error-msg"></div>
+					<p></p>
+					<form class="form-horizontal">
+						<div class="control-group">
+							<label class="control-label" for="selectName"></label>
+							<div class="controls">
+								<select id="selectName"></select>
+							</div>
+						</div>
+						<div class="control-group">
+							<label class="control-label" for="selectDescription"></label>
+							<div class="controls">
+								<select id="selectDescription"></select>
+							</div>
+						</div>
+						<div class="control-group" style="margin-bottom: 5px">
+							<label class="control-label" for="selectColor"></label>
+							<div class="controls">
+								<select id="selectColor"></select>
+							</div>
+						</div>
+					</form>
+					<div class="error-msg2"></div>
+				</div>
+				<!-- Extent -->
+				<div id="settings-extent" class="tab-content">
+					<p></p>
+					<div class="extentMapControl">
+						<button class="btn btn-small" id="extentModify"></button>
+						<button class="btn btn-small" id="extentDraw"></button>
+						<button class="btn btn-small" id="extentApply"></button>
+					</div>
+					<div id="extentMap"></div>
+					<div class="explain2"></div>
+				</div>
+				<!-- Zoom level -->
+				<div id="settings-zoom" class="tab-content">
+					<form class="form-horizontal">
+						<p></p>
+						<div class="control-group" style="margin-bottom: 5px">
+							<label class="control-label" for="listZoomLevels"></label>
+							<div class="controls">
+								<div class="btn-group">
+									<select id="listZoomLevels"></select>
+								</div>
+							</div>
+						</div>
+					</form>
+				</div>
+			</div>
+			<div class="modal-footer">
+				<span class="error"></span>
+				<button class="btnSave btn btn-primary" data-dismiss="modal"></button>
+				<button class="btnClose btn" data-dismiss="modal" aria-hidden="true"></button>
+			</div>
+		</div>
+
+		<!-- Help popup -->
+		<div class="modal hide" id="helpPopup" data-backdrop="static" tabindex="-1">
+			<div class="modal-header">
+				<button type="button" class="close" data-dismiss="modal" aria-hidden="true">
+					&times;
+				</button>
+				<h3></h3>
+			</div>
+			<div class="helpPopupHeader modal-tabs">
+				<div class="tab"></div>
+				<div class="tab"></div>
+				<div class="tab"></div>
+				<div class="tab"></div>
+				<div class="tab"></div>
+			</div>
+			<div class="modal-body">
+				<div id="help-tab1" class="tab-content"></div>
+				<div id="help-tab2" class="tab-content"></div>
+				<div id="help-tab3" class="tab-content"></div>
+				<div id="help-tab4" class="tab-content"></div>
+				<div id="help-tab5" class="tab-content"></div>
+			</div>
+			<div class="modal-footer">
+				<button class="btnClose btn" data-dismiss="modal" aria-hidden="true"></button>
+			</div>
+		</div>
+
+		<!-- Browser popup -->
+		<div class="modal hide" id="browserPopup" data-backdrop="static" tabindex="-1">
+			<div class="modal-header">
+				<button type="button" class="close" data-dismiss="modal" aria-hidden="true">
+					&times;
+				</button>
+				<h3></h3>
+			</div>
+			<div class="modal-body">
+				<p class="browserExplain"></p>
+				<p class="browserExplain2"></p>
+			</div>
+			<div class="modal-footer">
+				<span class="dataFooterText"></span>
+				<button class="btnClose btn btn-primary" data-dismiss="modal"></button>
+			</div>
+		</div>
+
+		<!-- Fatal error box -->
+		<div id="fatalError">
+			<table border="0">
+				<tr>
+					<td width="70px" align="center" id="fatalError-icon"></td>
+					<td><b class="error-title"></b><p class="error-msg"></p></td>
+				</tr>
+			</table>
+		</div>
+
+		<!-- About Modal -->
+
+		<!-- Modal -->
+		<div class="modal fade" id="aboutModal" style="display:none" tabindex="-1" role="dialog" aria-labelledby="aboutModalLabel" aria-hidden="true">
+			<div class="modal-dialog">
+				<div class="modal-content">
+					<div class="modal-header">
+						<button type="button" class="close" data-dismiss="modal" aria-hidden="true">
+							&times;
+						</button>
+						<h4 class="modal-title">About and Credits</h4>
+					</div>
+					<div class="modal-body" style="font-family: Arial,Helvetica,sans-serif;overflow-y:scroll!important">
+							<img src="resources/images/modal2.png" />
+							<h1 style="color: rgb(194, 172, 126);">Credits</h1>
+							<p>
+								Tour back in time through Christchurch in 1941, 1965, 1973, 1984, 1994 and 2011.
+							</p>
+							<br />
+							<p>
+								Enjoy going back in time :P
+							</p>
+							<br />
+							<img src="resources/images/coomsie_small.png" />
+							<br />
+							<h1 style="color: rgb(194, 172, 126);">Map Data Providers</h1>
+							<p>
+								This web application would not be possible without the <a href="http://en.wikipedia.org/wiki/Open_data">open data</a> and images from the following locations.
+							</p>
+							<br />
+							<br />
+							<a  target='_blank' href="http://ecan.govt.nz"> <img src="http://ecan.govt.nz/ecan-logo.gif" alt='environment canterbury logo'/> </a>
+							<br />
+							<a  target='_blank' href="http://ccc.govt.nz"> <img src="http://resources.ccc.govt.nz/Images/ExternalWebSite/CCCFooterLogo.jpg" alt='ccc logo'/> </a>						
+							<br />
+							<a target='_blank' href="http://www.linz.govt.nz"> <img src="http://www.linz.govt.nz/sites/all/themes/linzupgrade/logo.png" alt='linz logo'/> </a>
+							<br />
+							<a  target='_blank' href="http://newzealand.govt.nz"> <img src="http://resources.ccc.govt.nz/Images/ExternalWebSite/nzgovtlogo.gif" alt='govt logo'/> </a>
+							<br />
+							<div style="padding-left: 50px;">
+								<ul>
+									<li>
+										1941 Aerials - <a target='_blank' href="http://gis.ecan.govt.nz/arcgis/rest/services/Public/Post_Feb2011_Earthquake_Imagery/MapServer">here</a>
+									</li>
+                                    <li>
+										1946 Aerials - <a target='_blank' href="http://gis.ecan.govt.nz/arcgis/rest/services/Imagery/SN393_Christchurch_19460528/MapServer">here</a>
+									</li>
+                                    <li>
+										1955 Aerials - <a target='_blank' href="http://gis.ecan.govt.nz/arcgis/rest/services/Imagery/SN872_Christchurch_19550510/MapServer">here</a>
+									</li>
+									<li>
+										1965 Aerials - <a target='_blank' href="http://gis.ecan.govt.nz/arcgis/rest/services/Imagery/SN1786_Christchurch_19651029/MapServer">here</a>
+									</li>
+									<li>
+										1973 Aerials - <a target='_blank' href="http://gis.ecan.govt.nz/arcgis/rest/services/Imagery/SN2634_Christchurch_19730926/MapServer">here</a>
+									</li>
+									<li>
+										1984 Aerials - <a target='_blank' href="http://gis.ecan.govt.nz/arcgis/rest/services/Imagery/SN8389_Christchurch_19840928/MapServer">here</a>
+									</li>
+									<li>
+										1994 Aerials - <a target='_blank' href="http://gis.ecan.govt.nz/arcgis/rest/services/Imagery/SN9381_Christchurch_19941126/MapServer">here</a>
+									</li>
+									<li>
+										2004 Aerials - <a target='_blank' href="http://gis.ecan.govt.nz/arcgis/rest/services/Imagery/TL_Ortho75_Canterbury/MapServer">here</a>
+									</li>
+									<li>
+										Feb 2011 Earthquake Aerials - <a target='_blank' href="http://gis.ecan.govt.nz/arcgis/rest/services/Imagery/">here</a>
+									</li>
+									<li>
+										Street / Placenames Layer - <a target='_blank' href="http://gis.ecan.govt.nz/arcgis/rest/services/Public/Region_Base_Labels/MapServer">here</a>
+									</li>
+								</ul>
+							</div>
+							<br />
+							<div style="padding: 10px;">
+								<a rel="license" href="http://creativecommons.org/licenses/by/3.0/nz/"><img alt="Creative Commons License" style="border-width:0" src="http://i.creativecommons.org/l/by/3.0/nz/88x31.png" /></a>
+								<br />
+								These works is licensed under a <a rel="license" href="http://creativecommons.org/licenses/by/3.0/nz/">Creative Commons Attribution 3.0 New Zealand License</a>
+
+							</div>
+							<p>
+								Note: 1946,1955 and 1965 Aerials are sourced from NZAM - Copyright restricted
+							</p>
+							<br />
+						<br />
+						<h2>Photos</h2>
+
+						<div style="padding-left: 50px;">
+							<ul>
+								<li>
+									<p>
+										View of Colombo Street taken from the north bank of the River Avon looking towards the Cathedral. The Port Hills can be seen in the distance.Colombo Street north, Christchurch, looking south. (1880s) <i>(Photo:)Tonks album. Ref: PA1-o-497-05. Alexander Turnbull Library, Wellington, New Zealand. <a href='http://natlib.govt.nz/records/22366281'>http://natlib.govt.nz/records/22366281</a></i>
+									</p>
+								</li>
+								<li>
+									<p>
+										View of Christchurch looking up Colombo Street, with the United Service Hotel in the right foreground. <i>(Photograph: taken from the Cathedral by William A Price ca 1910. 1/2-001347-G. Price, William Archer, 1866-1948 :Collection of post card negatives. Ref: 1/2-001347-G. Alexander Turnbull Library, Wellington, New Zealand. <a href='http://natlib.govt.nz/records/22739669'>http://natlib.govt.nz/records/22739669</a></i>
+									</p>
+								<li>
+									<p>
+										View of Avonside Loop<i>Photo: <a href='http://freepages.genealogy.rootsweb.ancestry.com/~nzbound/avonside.htm'>more</a> </i>
+									</p>
+								</li>
+								<li>
+									<p>
+										View of Avonside Drive, Notice the avon river in the 1941's. Parts of it is gone in later years.
+									</p>
+								</li>
+								<li>
+									<p>
+										Photo looking over New Brighton / Bexley 1979 <i>Photo: New Brighton & Bexley Christchurch - February 1979 by Kevin Hill by cc nc sa <a href='http://ketechristchurch.peoplesnetworknz.info/en/places_and_streets/images/show/9490-kevin-hill-new-brighton-and-bexley-christchurch-1979-132?view_size=large'>more</a></i>
+									</p>
+								</li>
+								<li>
+									<p>
+										New Regent Street 1932 Promotion Book - page 47 by Ron (by cc nc ) <a href='http://ketechristchurch.peoplesnetworknz.info/en/places_and_streets/images/show/1551-new-regent-street-1932-promotion-book-page-47?view_size=large'>more</a>
+									</p>
+								</li>
+								<li>
+									<p>
+										Lyttelton Photo: <i>by CCL Photo Hunt is licensed under a cc by nc sa <a href='http://ketechristchurch.peoplesnetworknz.info/en/site/images/show/6306-lyttelton?view_size=large'>more</a></i>
+									</p>
+								</li>
+								<li>
+									<p>
+										Sumner towards Scarborough Photo: <i>by CCL Photo Hunt is licensed under cc by  nc sa <a href='http://ketechristchurch.peoplesnetworknz.info/en/site/images/show/6294-sumner-towards-scarborough?view_size=large'>more</a></i>
+									</p>
+								</li>
+								<li>
+									<p>
+										This is a photograph of a father and his business partners standing outside "Cambridge Service Limited" which was situated on the corner of Cambridge Terrace and Colombo Street, right hand corner over the Bridge of Remembrance where the demolition of Sacchi's building has recently occurred by CCL Photo Hunt is licensed under a cc by nc sa <a href='http://ketechristchurch.peoplesnetworknz.info/en/site/images/show/6552-cambridge-service-limited?view_size=large'>more </a>
+									</p>
+								</li>
+								<li>
+									<p>
+										Burwood Rabbit Farm. Was 24 Francis Street - now Bassett Street. Early 1930s. Elizabeth (Bet) & Katheen Cullimore (my mother) & Punch. Raised Angora rabbits.<a href='http://ketechristchurch.peoplesnetworknz.info/en/site/images/show/6545-burwood-rabbit-farm?view_size=large'>more</a>
+									</p>
+								</li>
+								<li>
+									<p>
+										Colombo Street looking south <i>Photo: Colombo St, Christchurch - January 1974 by Kevin Hill under cc by nc sa <a href='http://ketechristchurch.peoplesnetworknz.info/site/images/show/6572-colombo-st-christchurch-january-1974'>more</a></i>
+									</p>
+								</li>
+								<li>
+									<p>
+										Regent Theatre, originally known as the Royal Exchange buildings. Demolished 2011. <i> Photo: Regent Theatre by Jane is licensed under a cc by nc sa <a href='http://ketechristchurch.peoplesnetworknz.info/en/site/topics/show/395-regent-theatre'>more</a>
+									</p>
+								</li>
+								<li>
+									<p>
+										Likely taken by A R Galbraith, who was the
+										City Engineer at that time. He was quite the pioneer and completely
+										re-organised the Council's Engineering department.
+										Credit: 'Christchurch City Council Archives Photographic Collection'
+
+									</p>
+								</li>
+								<li>
+									<p>
+										Photo over looking the heathcote river where it was cut through land covered by houses. Credit: Cafe Cecil
+										<a href="http://www.flickr.com/photos/cafececil/5135473706/">more</a>
+									</p>
+								</li>
+								<li>
+									<p>
+										View of Cave Rock in Sumner. Credit: by Christchurch City Libraries <a href="http://www.flickr.com/photos/29328098@N06/5099824393/in/photolist-8LDW7M-b6RmWM-bAnfcQ-8AVz6S-8ASo1k-8AVs6S-8AVy6w-8AVuzE-8ASkSi-8AStuK-8ASixx-8AVxww-9mEhCr-9mEhVX-9mHkZE-86qWnk-86ugay-aZy26T-86ukzW-aZYAaM-dxyXkv-8ZnxEd-86ujq5-8ASkne-8AVf2E-8ASp3x-8AVfBj-8ASmve-bPgUbz-a6QEkD-bAnffG-bPgU3z-afWfs9-afTuF4-afTuHz-afWfh3-a6QD3v-a6Tvzo-a6Tvqm-8YwAv4-cctkgL-aZYivF-8FmTL6-aZYhRR-a2aPUk-b6RoW8-9713N5-8ASqtn-8AVvMQ-8ASr2F-8ASmNa">more</a>
+									</p>
+								</li>
+								<li>
+									<p>
+										 Photo of Shag Rock in Sumner before the earthquake destroyed most of it. by Benjamin Humphrey Credit: <a href="http://www.flickr.com/photos/humphreybc/3639765235/sizes/m/in/photostream/" >more</a>
+									</p>
+								</li>
+								<li>
+									<p>
+										 Photo of the 'Spit' which runs along rocking horse road. Prevously all sand dunes in 1940's. by annzstream <a href="http://www.flickr.com/photos/hadevereux/3408200785/sizes/z/in/photolist-6caVmv-8LYnD2-eyWnA1/">more</a>
+									</p>
+								</li>
+								<li>
+									<p>
+										 Photo of Wigram Credit: Christchurch City Libraries <a href="http://www.flickr.com/photos/christchurchcitylibraries/4009954292/sizes/z/in/photostream/">more</a>
+									</p>
+								</li>
+								<li>
+									<p>
+										 Photo of the New Brighton Pier (Modern one). See in the 1940's what the wooden structure looked like. By Kiwi Flickr <a href="http://www.flickr.com/photos/kiwi/7429952964/sizes/z/in/photostream/">more</a>
+									</p>
+								</li>
+								<li>
+									<p>
+										Children Fete in Lancaster Park Credit unknown : <a href="http://www.flickr.com/photos/32741315@N06/4939595552/in/photolist-8wuHEy-dZzZSY-fqrf9C-dcrwdq-9qZgw8-b5zu1e-d1U69o-d1U6dC-cvAfT3-9SZY8b-anPWMy-7z7z4z-7z7AnF-7z7zv6-7z7A4K-7CRJrg-7CRJnB-7CVwZJ-7CRJtk-7CRJdx-7CVxcL-dob14h-7zbhqu-7z7uCK-7zbd13-7zbfwL-7zbfVo-7zbgVb-7z7ttX-7z7sWT-7zbnA5-7z7sEX-7z7rQX-7zbitG-7zbe37-7zbch5">more</a>
+									</p>
+								</li>
+								<li>
+									<p>
+										Bromley from the air in Nov 1962. Credit:  Christchurch City. Whites Aviation Ltd :Photographs. Ref: WA-58561-G. Alexander Turnbull Library Wellington New Zealand.<a href="http://natlib.govt.nz/records/23080064">more</a>
+									</p>
+								</li>
+							</ul>
+						</div>
+
+					</div><!-- end of modal body-->
+					<div class="modal-footer">
+						<button type="button" class="btn btn-default" data-dismiss="modal">
+							Close
+						</button>
+					</div>
+				</div> <!-- /.modal-content -->
+			</div> <!-- /.modal-dialog -->
+		</div><!-- /.modal -->
+
+		<script type="text/javascript">
+			loadJS('//js.arcgis.com/3.6/init.js', true);
+			loadJS('//ajax.googleapis.com/ajax/libs/jquery/1.9.1/jquery.min.js', true);
+
+			loadJS('app/maptour-config.js');
+
+			function getUrlVar(name) {
+				var vars = [], hash;
+				if (window.location.href.indexOf('?') == -1)
+					return null;
+
+				var hashes = window.location.href.slice(window.location.href.indexOf('?') + 1).split('&');
+				for (var i = 0; i < hashes.length; i++) {
+					hash = hashes[i].split('=');
+					hash[0] = hash[0].split('#')[0];
+					vars.push(hash[0]);
+					vars[hash[0]] = (hash[1] == undefined) ? "true" : hash[1];
+				}
+				return vars[name];
+			}
+
+			if (isProduction) {
+				if (getUrlVar('edit'))
+					loadJS('app/maptour-builder-min.js');
+				else
+					loadJS('app/maptour-viewer-min.js');
+			} else {
+				loadJS('lib/bootstrap/js/bootstrap.min.js');
+				loadJS('lib/spin.min.js');
+				loadJS('lib/cubiq.iscroll.js');
+				loadJS('lib/cubiq.swipeview.js');
+				loadJS('lib/jquery-ui-1.10.0.custom.min.js');
+				loadJS('lib/jquery.ui.touch-punch.min.js');
+				loadJS('lib/jquery.exif.js');
+				loadJS('lib/jquery.fastClick.js');
+				loadJS('lib/jquery.hammer.min.js');
+				loadJS('lib/megapix-image.js');
+				loadJS('lib/spectrum/spectrum.js');
+				loadJS('lib/bootstrap.file-input.js');
+				loadJS('lib/sharethis.buttons.js');
+			}
+		</script>
+
+		<!-- sharethis.com social media sharing -->
+		<script type="text/javascript">
+			stLight.options({
+				publisher : '77225c91-2742-42f7-b1b4-bddda99a9bde'
+			});
+		</script>
+
+		<!-- Enable Google Analytics on storymaps.esri.com -->
+		<script>
+			(function(i, s, o, g, r, a, m) {
+				i['GoogleAnalyticsObject'] = r;
+				i[r] = i[r] ||
+				function() {
+					(i[r].q = i[r].q || []).push(arguments)
+				}, i[r].l = 1 * new Date();
+				a = s.createElement(o), m = s.getElementsByTagName(o)[0];
+				a.async = 1;
+				a.src = g;
+				m.parentNode.insertBefore(a, m)
+			})(window, document, 'script', '//www.google-analytics.com/analytics.js', 'ga');
+
+			ga('create', 'UA-43273417-1', 'tour-of-chch.appspot.com');
+			ga('send', 'pageview');
+
+		</script>
+
+		<script type="text/javascript">
+			var loadingIndicator = {};
+			var i18n = null;
+
+			if (document.location.protocol == "file:") {
+				$(document).ready(function() {
+					$("#fatalError .error-title").html("Application loading failed");
+					$("#fatalError .error-msg").html("The application has to be accessed through a web server. Consult user guide for detail.");
+					$("#fatalError").show();
+				});
+			} else {
+				dojo.addOnLoad(function() {
+					require(["dojo/i18n", "storymaps/ui/loadingIndicator/LoadingIndicator", "esri/map", "dojo/domReady!", "esri/arcgis/Portal", "esri/arcgis/utils", "dojo/ready"], function(jsapiBundle, LoadingIndicator) {
+						i18n = jsapiBundle.getLocalization("esriTemplate", "template");
+						loadingIndicator = new LoadingIndicator("loadingIndicator", "loadingMessage");
+						loadingIndicator.init();
+						loadingIndicator.setMessage(i18n.viewer.loading.step1);
+
+						require(["storymaps/core/Core", "storymaps/maptour/core/MainView"], function(Core, MainView) {
+							var urlParams = esri.urlToObject(document.location.search).query || {};
+							var isInBuilderMode = urlParams.edit != null;
+
+							if (isInBuilderMode) {
+								require(["storymaps/builder/Builder", "storymaps/maptour/builder/BuilderView"], function(Builder, BuilderView) {
+									Core.init(new MainView(), Builder);
+									Builder.init(Core, new BuilderView());
+								});
+							} else
+								Core.init(new MainView());
+						});
+					});
+				});
+			}
+		</script>
+		<script type="text/javascript" src="resources/bootstrap/bootstrap.js"></script>
+		
+		<script type="text/javascript">
+			//custom hacks
+			
+			var isMobile = {
+            Android: function () {
+                return navigator.userAgent.match(/Android/i);
+            },
+            BlackBerry: function () {
+                return navigator.userAgent.match(/BlackBerry/i);
+            },
+            iOS: function () {
+                return navigator.userAgent.match(/iPhone|iPad|iPod/i);
+            },
+            iPad: function () {
+                return navigator.userAgent.match(/iPad/i);
+            },
+            iPhone: function () {
+                return navigator.userAgent.match(/iPhone/i);
+            },
+            Opera: function () {
+                return navigator.userAgent.match(/Opera Mini/i);
+            },
+            Windows: function () {
+                return navigator.userAgent.match(/IEMobile/i);
+            },
+            Tablet: function () {
+                
+                var isTablet = null;
+                var userAgent = navigator.userAgent.toLowerCase();
+
+                // Check for android  
+                if ((userAgent.search("android") > -1) && !(userAgent.search("mobile") > -1)) {
+                    isTablet = true;
+                }
+                if (userAgent.search("ipad") > -1) {
+                    isTablet = true;
+                }
+                return isTablet;
+            },
+            any: function () {
+                return (isMobile.Android() || isMobile.BlackBerry() || isMobile.iOS() || isMobile.Opera() || isMobile.Windows());
+            }
+        };
+
+        var isIE = {
+            IE6: function () {
+                return navigator.userAgent.match(/MSIE 6/i);
+            },
+            IE7: function () {
+                return navigator.userAgent.match(/MSIE 7/i);
+            },
+            IE8: function () {
+                return navigator.userAgent.match(/MSIE 8/i);
+            },
+            IE9: function () {
+                return navigator.userAgent.match(/MSIE 9/i);
+            },
+            IE10: function () {
+                return navigator.userAgent.match(/MSIE 10/i);
+            },
+            IE: function () {
+                return navigator.userAgent.match(/MSIE/i);
+            },
+            IEless9: function () {
+                return (isIE.IE6() || isIE.IE7() || isIE.IE8() || isIE.IE9());
+            },
+            any: function () {
+                return (isIE.IE6() || isIE.IE7() || isIE.IE8() || isIE.IE9 || isIE.IE);
+            }
+        };
+			
+			$(document).ready(function() {
+				
+				$('#aboutModal').modal({
+					backdrop: true,
+        			keyboard: true,
+					show:false
+				});
+
+				//prepare quick search 
+				// var t=setTimeout(function(){
+					// typeheadSearch();
+				// },3000)
+				typeheadSearch();
+				
+				
+				//run to fix iOS safari bug see here ... http://stackoverflow.com/questions/5340345/safari-ajax-bug-checked-radio-not-checked
+				$('#m1941').prop("checked", true);
+				$('#1941').prop("checked", true);
+
+				
+				
+				if(isMobile.iPhone() !== null ){
+					setTimeout(function(){
+						 $('#SearchContainer').hide();
+						},3000);
+					};
+
+				//load UI triggers
+				$('#legendPanel .redzone').on('click', function() {
+					//run map turn off code.
+					turnLayerOff(findLayerId('CERA_ZoneMapAndTechClass_9598'), $('#legendPanel #redzone input').prop('checked'));
+				});
+				//end of on click.
+
+				$('#legendPanelMobile .redzone').on('click', function() {
+					//run map turn off code.
+					turnLayerOff(findLayerId('CERA_ZoneMapAndTechClass_9598'), $('#legendPanelMobile #redzone input').prop('checked'));
+				});
+				//end of on click.
+
+				$('#legendPanel .tc3').on('click', function() {
+					//run map turn off code.
+					turnLayerOff(findLayerId('CERA_ZoneMapAndTechClass_5001'), $('#legendPanel #tc3 input').prop('checked'));
+				});
+				//end of on click.
+
+				$('#legendPanelMobile .tc3').on('click', function() {
+					//run map turn off code.
+					turnLayerOff(findLayerId('CERA_ZoneMapAndTechClass_5001'), $('#legendPanelMobile #tc3 input').prop('checked'));
+				});
+				//end of on click.
+
+				$('#legendPanel #imageryDates input').on('click', function() {
+					iterateImagery();
+				});
+				//end of on click.
+
+				//end of on click.
+
+				$('#legendPanelMobile #imageryDates input').on('click', function() {
+					//run map turn off code.
+					iterateMobileImagery();
+
+					//changeOpacity(findLayerId('Imagery'), $('#legendPanelMobile #imagery input').prop('checked'));
+				});
+				//end of on click.
+
+				$('#legendPanel .labels').on('click', function() {
+					//run map turn off code.
+					changeOpacity(findLayerId('Region_Base_Labels'), $('#legendPanel #labels input').prop('checked'));
+				});
+				//end of on click.
+
+				$('#legendPanelMobile .labels').on('click', function() {
+					//run map turn off code.
+					changeOpacity(findLayerId('Region_Base_Labels'), $('#legendPanelMobile #labels input').prop('checked'));
+				});
+				//end of on click.
+				
+				//toggle picture button
+				$('#toggleImage').on('click',function(){
+					$('#picturePanel').toggle('slide');
+				});
+				
+				$('#clearBtn').on('click', function () {
+        			$('#AddressSearch').val('');
+    			});
+
+				$('#closeHeaderMobile').fastClick(customHideMobileBanner);
+
+				$('#openHeaderMobile').fastClick(customshowMobileHeader);
+				
+				$('#SearchContainer').show();
+
+				//after dojo is loaded.
+				dojo.addOnLoad(function() {
+					
+					
+
+				})
+			});
+
+			//functions
+			
+			function iterateImagery() {
+				
+				var _input = $('#legendPanel  input[type=radio]');
+					$.each(_input, function(index, value) {
+						//run map turn off code.
+						if (debugMode){
+						console.log($(this).is(':checked'));
+						console.log($(this).val());
+						}						
+						//changeOpacity(findLayerId($(this).val()), $(this).is(':checked'));
+						turnLayerOff(findLayerId($(this).val()), $(this).is(':checked'));
+					})
+					/*
+				//test for 1941
+				if (!$('#1941').prop('checked')) {
+
+					//test for what imagery date?
+					var _input = $('#legendPanel  input[type=radio]');
+					$.each(_input, function(index, value) {
+						//run map turn off code.
+						console.log($(this).is(':checked'));
+						console.log($(this).val());
+						//changeOpacity(findLayerId($(this).val()), $(this).is(':checked'));
+						turnLayerOff(findLayerId($(this).val()), $(this).is(':checked'));
+					})
+					//run map turn off code.
+				} else {//false
+					var _input = $('#legendPanel  input[type=radio]');
+					$.each(_input, function(index, value) {
+						if($(this).val()!= '1941') //dont do 1941
+						turnLayerOff(findLayerId($(this).val()), false);
+						//changeOpacity(findLayerId($(this).val()), false);
+					});
+					//changeOpacity(findLayerId('Imagery'), false);
+				};
+				*/
+			};
+
+			function iterateMobileImagery() {
+				
+				var _input = $('#legendPanelMobile  input[type=radio]');
+					$.each(_input, function(index, value) {
+						//run map turn off code.
+						if (debugMode){
+						console.log($(this).is(':checked'));
+						console.log($(this).val());
+						}
+						//changeOpacity(findLayerId($(this).val()), $(this).is(':checked'));
+						turnLayerOff(findLayerId($(this).val()), $(this).is(':checked'));
+					})
+				/*	
+				//test for tick
+				if ($('#legendPanelMobile #imagery input').prop('checked')) {
+
+					//test for what imagery date?
+					var _input = $('#legendPanelMobile  input[type=radio]');
+					$.each(_input, function(index, value) {
+						//run map turn off code.
+						//console.log($(this).is(':checked'));
+						//console.log($(this).val());
+						//changeOpacity(findLayerId($(this).val()), $(this).is(':checked'));
+						turnLayerOff(findLayerId($(this).val()), $(this).is(':checked'));
+					})
+					//run map turn off code.
+				} else {//false
+					var _input = $('#legendPanelMobile  input[type=radio]');
+					$.each(_input, function(index, value) {
+						//changeOpacity(findLayerId($(this).val()), false);
+						turnLayerOff(findLayerId($(this).val()), false);
+					});
+					//changeOpacity(findLayerId('Imagery'), false);
+				};
+				*/
+			};
+
+			function turnLayerOff(layerid, isOn) {
+				
+				if (debugMode)
+				console.log('fn: turnLayerOff', layerid, isOn);
+				
+				var lyr = app.map.getLayer(app.map.layerIds[layerid]);
+				if (!isOn)
+					lyr.hide();
+				if (isOn)
+					lyr.show();
+			}
+
+			function findLayerId(layername) {
+				var _return = null;
+				$.each(app.map.layerIds, function(index, value) {
+					if (app.map.layerIds[index].indexOf(layername) === 0)
+						_return = index;
+				});
+				return _return;
+			}
+
+			function changeOpacity(layerid, isOn) {
+				var _opacity = 0;
+				if (isOn)
+					_opacity = 1;
+				app.map.getLayer(app.map.layerIds[layerid]).opacity = _opacity;
+				app.map.getLayer(app.map.layerIds[layerid]).refresh();
+			}
+
+			function customHideMobileBanner() {
+				$("#headerMobile .banner2").slideUp(250);
+				$("#openHeaderMobile").css("top", "41px");
+				$("#headerMobile").removeClass("firstDisplay");
+			}
+
+			function customshowMobileHeader() {
+				$(" #headerMobile .banner2").slideDown(250);
+			}
+			
+			//some search vars
+			var debugMode = false;
+			var quickSearchSelected = null;
+			var quickSearch =
+            {
+            "VAL": { url: "http://gis.ecan.govt.nz/ArcGIS/rest/services/Public/Region_Base/MapServer/6", fields: "Appellation,PAR_ID,Titles,VALUATION_NO,Link", expression: "VALUATION_NO = '[value]'", title: "Property Info", hiddenFields: "PAR_ID,Titles" },
+            "PAR": { url: "http://gis.ecan.govt.nz/ArcGIS/rest/services/Public/Region_Base/MapServer/6", fields: "Appellation,PAR_ID,Titles,VALUATION_NO,Link", expression: "PAR_ID = '[value]'", title: "Property Info", hiddenFields: "PAR_ID" }
+            };
+
+
+			function typeheadSearch() {
+				//var for typehead json mapping
+				var map;
+
+				$("#AddressSearch").typeahead({
+					minLength : 5,
+					items : 10,
+					source : function(query, process) {
+						//make sure the no match alert is hidden.
+						$('#nomatch').addClass('hidden');
+
+						$.ajax({
+                			url:'http://canterburymaps.govt.nz/viewer/search.ashx',
+                			dataType: "jsonp",
+                			type: "GET",
+                			crossDomain: true,
+                			data: {
+		                    f: "pjson",
+		                    searchclass: 'VAL,PAR,NAM,RDI',
+		                    searchlimit: 20,
+		                    searchterm: query
+                			}
+                			}).done(
+                			function(data) {
+                			
+                			if (debugMode)
+							console.log(data.searchResults);
+							if (debugMode)
+								console.log(data.searchResults[0].value.searchkey);
+							//test if no matches and show alert
+							if (data.searchResults[0].value.searchkey == "No Matching Results") {
+								$('#nomatch').removeClass('hidden');
+							}
+
+							var newData = [];
+							map = {};
+							$.each(data.searchResults, function(i, add) {
+								map[this.label] = add;
+								newData.push(add.label);
+							});
+							process(newData);
+						});
+					},
+					updater : function(item) {
+						//started new search so hide all previous results
+						//ecan.llur.showInfoLandAlert(0, true);
+
+						if (debugMode)
+							console.log('selected', item);
+						// Set the current item
+						quickSearchSelected = map[item].value;
+						if (debugMode)
+							console.log('address selected', quickSearchSelected);
+
+						//if (item != ' [No Matching Results]') //weird why is this here?
+						if (item != 'No Matching Results') {
+							// Execute the search
+							// remove marker here?
+							
+							executeQuickSearch();
+							console.log('executesearch');
+
+						}
+						return item;
+					}
+				});
+
+			};
+			
+	function executeQuickSearch() {
+    //start loading image
+    // Check for a search item
+    if (quickSearchSelected != null) {
+            // Add a graphic to the map and zoom to the location
+            
+            $('#picturePanel').hide('slide');
+            
+            if (debugMode)
+            console.log('adding pt');
+
+            // Create a point
+            var loc = new esri.geometry.Point(quickSearchSelected.x, quickSearchSelected.y, new esri.SpatialReference({ wkid: quickSearchSelected.outSR }));
+
+            // Create a graphic to display the point
+            var location = new esri.Graphic(loc, new esri.symbol.SimpleMarkerSymbol(esri.symbol.SimpleMarkerSymbol.STYLE_SQUARE, 10,
+                           new esri.symbol.SimpleLineSymbol(esri.symbol.SimpleLineSymbol.STYLE_SOLID,
+                           new dojo.Color([255, 0, 0]), 1), new dojo.Color([0, 255, 0, 0.25])));
+
+            // Create the label graphic to label the location
+            var label = new esri.Graphic(loc, new esri.symbol.TextSymbol(quickSearchSelected.label)
+                        .setColor(new dojo.Color([0, 0, 0]))
+                        .setFont(new esri.symbol.Font("12pt")
+                        .setWeight(esri.symbol.Font.WEIGHT_BOLD)));
+            
+            // if (app.map.graphicsLayer === undefined){
+			// // Add the drawing graphics layer
+        	// app.map.graphicsLayer = new esri.layers.GraphicsLayer();
+        	// app.map.graphicsLayer.id = "Drawing Graphics";
+        	// app.map.graphicsLayer.visible = true;
+        	// app.map.addLayer(app.map.graphicsLayer, 0);
+        	// }
+			//         
+            // // Add graphics to the drawiing graphics layer
+            // app.map.graphicsLayer.add(location);
+            // app.map.graphicsLayer.add(label);
+
+            // Zoom the map to the point location
+            app.map.centerAndZoom(loc, 16);
+    }
+};
+		</script>
+
+	</body>
+</html>
